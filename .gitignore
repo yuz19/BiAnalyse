@@ -4,4 +4,3 @@ myenv/
 # Ignore Python bytecode cache directory
 __pycache__/
 
-.gitignore
