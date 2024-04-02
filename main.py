@@ -14,6 +14,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={r"/api/analyse/*": {"origins": "*"}})
 CORS(app, resources={r"/api/sql/*": {"origins": "*"}})
+CORS(app, resources={r"/api/getMesure/*": {"origins": "*"}})
+
 
 array_return=[]
 @app.route('/api/analyse/', methods=['GET', 'POST'])
@@ -80,6 +82,7 @@ def analyse():
     else:
         return jsonify({"Error": "Choisir un algorithme"}), 400
 
+ 
 @app.route('/api/getMesure/', methods=['GET'])
 def getMesure():
     mesure=[]
