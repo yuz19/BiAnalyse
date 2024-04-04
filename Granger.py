@@ -122,9 +122,9 @@ class Granger:
         df = df.fillna(df.mean())
         # Effectuer le test de causalité de Granger pour chaque colonne dans cette table
         max_lag = 5  # Choisissez le nombre maximal de retards à tester
-        results_all={}
+        results_all=[]
         for col1, col2 in itertools.combinations(self.columns, 2):   
-
+             
             # Perform the Granger causality test
             try:
                 results= grangercausalitytests(df[[col1,col2]], max_lag, verbose=True)
@@ -169,13 +169,12 @@ class Granger:
             # for affichage in affichage_granger:
             #     print(affichage)
                 
-            results_all[f"{col1}, {col2}"] = {
+            results_all.append({
+                "columns": [col1, col2],
                 "affichage_granger": affichage_granger,
                 "lag_results": lag_results
-            }
+            })
             
-
-        # Convert the dictionary to a JSON string
-        results_all = json.dumps(results_all)
+ 
 
         return results_all, self.columns, data

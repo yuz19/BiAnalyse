@@ -99,6 +99,7 @@ def connect_to_mysql():
     global conn
     global connection_info
     if request.method == 'POST':
+      
         data = request.json
         hostname = data.get('host')
         dbname = data.get('database')
@@ -127,7 +128,23 @@ def connect_to_mysql():
                 return jsonify({'error': 'Impossible de se connecter à MySQL'}), 500
         except mysql.connector.Error as e:
             return jsonify({'error': f'Erreur de connexion à MySQL : {str(e)}'}), 500
-
+        # else:
+        #     print("test")
+        #     try:
+        #         conn = mysql.connector.connect(
+        #             host=connection_info['host'],
+        #             database=connection_info['database'],
+        #             user=connection_info['user'],
+        #             password=connection_info['password'],
+        #             port=connection_info['port']
+        #         )
+        #         if conn.is_connected():
+        #             return jsonify({'message': 'Connexion réussie à MySQL'}), 200
+        #         else:
+        #             return jsonify({'error': 'Impossible de se connecter à MySQL'}), 500
+        #     except mysql.connector.Error as e:
+        #         return jsonify({'error': f'Erreur de connexion à MySQL : {str(e)}'}), 500
+         
     elif request.method == 'GET':
         if connection_info:
             return jsonify(connection_info), 200
