@@ -58,17 +58,16 @@ def analyse():
                        
             if algorithms.get('proposer', False):
                 # column = data.get('column', [])
-                # column="prix_ventes"
+                column="prix_ventes"
                 TDate="index_JMA"
                 proposer_instance=Proposer(conn)
-                proposer_result = proposer_instance.start(columns,TDate,date_prefrence,date_interval)
+                proposer_result_tend_intervals,proposer_evenement,proposer_result_df = proposer_instance.start(column,TDate,date_prefrence,date_interval)
                 
-                if proposer_result :
-                    array_return.append({'proposer':proposer_result})
+                if proposer_result_tend_intervals :
+                    array_return.append({'proposer': [{"tendance": proposer_result_tend_intervals,"evenement":proposer_evenement, "value": proposer_result_df}]})
                 else:
                     array_return.append({'proposer':[]})
-            else:    
-                array_return.append({'proposer':[]})        
+                    
             if array_return:
                 return jsonify(array_return)
             else:

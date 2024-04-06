@@ -41,114 +41,93 @@ class Proposer:
                     date_interval = [date_str.strftime("%d-%m-%Y") for date_str in date_interval]
 
         return date_interval
-    def start(self, columns,TDate,date_prefrence,date_interval):
+    def start(self, column,TDate,date_prefrence,date_interval):
         cursor = self.conn.cursor()
-        results_all=[]
-        results=[]
-        data_all={}
+        cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{column}'")
+        row = cursor.fetchall()
+        print(row)
+        table_name = row[0][0]
+        print("table name", table_name)
+        data_frames=[]
         date_interval=self.DynamiqueFormatDate(date_interval)
         print(date_interval)
-        for column in columns:
-            cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{column}'")
-            row = cursor.fetchall()
-            print(row)
-            table_name = row[0][0]
-            print("table name", table_name)
-            data_frames=[]
-
-            
-            # Récupérer les données de la colonne spécifiée
-            # cursor.execute(f"SELECT {column} FROM {table_name}")
-            # cursor.execute(f"SELECT jour, mois, annee, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID GROUP BY annee, mois, jour ORDER BY annee, mois, jour ASC")
-            if len(date_interval)==0:
-                cursor.execute(f"SELECT {date_prefrence}, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID GROUP BY {date_prefrence} ORDER BY {date_prefrence} ASC")
-            else:
-                print('havebet')
-                cursor.execute(f"SELECT {date_prefrence}, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID and time.date BETWEEN  '{date_interval[0]}' AND '{date_interval[1]}' GROUP BY {date_prefrence} ORDER BY {date_prefrence} ASC")
-
-            rows = cursor.fetchall()
-            
-            # data_frames = [row[3] for row in rows]
-            
-            data = []
-
-            for row in rows:
-            
-                if len(date_prefrence.split(','))==3:
-                    indexdate=f"{row[0]}-{row[1]}-{row[2]}"
-                elif len(date_prefrence.split(','))==2:
-                    indexdate=f"{row[0]}-{row[1]}"
-                else:
-                    indexdate=f"{row[0]}"
-                    
-                datasave={
-                    'index_JMA': indexdate,
-                    'valeur':row[len(date_prefrence.split(','))]
-                }
-                # datasave = {
-                #     'index_JMA': f"{row[0]}-{row[1]}-{row[2]}",
-                #     'index_MA': f"{row[1]}-{row[2]}",
-                #     'index_A': f"{row[2]}",
-                #     'valeur': row[3]
-                # }
-                data.append(datasave)
-               
-     
-                if column in data_all:
-                        data_all[column].append(datasave)
-                else:
-                    data_all[column] = [datasave]
- 
-            print("data",data)
-            # Créer un DataFrame à partir des données
-            # df = pd.DataFrame(data_frames,columns=[column])
-            # df[column] = df[column].astype(float)
-            # # print(data)
-            df = pd.DataFrame(data)
-            # df['valeur'] = df['valeur'].astype(float)
-            df['valeur'] = pd.to_numeric(df['valeur'], errors='coerce')
-            print(df)
-            # Détecter les points hauts et bas
-            # values = df[column].values
-            # Perform smoothing on the data
-            # alpha = 0.2  # Smoothing parameter
-            data_smoothed = SimpleExpSmoothing(df['valeur']).fit(smoothing_level=self.training_alpha(df['valeur']),optimized=False).fittedvalues
-            peaks = self.save_peaks(data_smoothed)
-            print(data_smoothed)
-            print("Length of peaks in smoothed data:", len(peaks))
-
-            values = df['valeur'].values
-            
-            peaks_unsmoothed = self.save_peaks(values)
-            print("Length of peaks in unsmoothed data:", len(peaks_unsmoothed))
-
-            # Analyser les tendances et les points hauts/bas
-            tend_intervals = self.analyze_tend_intervals( peaks,df,TDate)
-            
-            qualif_tend_intervals =self.qualification(tend_intervals)
-            evenements=self.Evenement(tend_intervals)
-            
-            # delta_t  Différence en jours
-            delta_t=self.delta_t(evenements)
-            # print(delta_t)
-            
-            ecart_temporel=self.ecart_temporel(evenements, delta_t ,0.9)
-            print(ecart_temporel)
-            # # # Convertir le DataFrame en un format JSON compatible
-            # Convertir le DataFrame en une liste de dictionnaires
-            # df_json = df.to_json(orient='split')
-            # print(tend_intervals)
-            results.append({
-                "column": column,
-                "tendance": tend_intervals,
-                "evenement":evenements,
-            })
-           
-        results_all.append(results)
         
-        results_all.append(data_all)
-        # return qualif_tend_intervals,evenements,df_json
-        return results_all,columns
+        # Récupérer les données de la colonne spécifiée
+        # cursor.execute(f"SELECT {column} FROM {table_name}")
+        # cursor.execute(f"SELECT jour, mois, annee, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID GROUP BY annee, mois, jour ORDER BY annee, mois, jour ASC")
+        if len(date_interval)==0:
+            cursor.execute(f"SELECT {date_prefrence}, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID GROUP BY {date_prefrence} ORDER BY {date_prefrence} ASC")
+        else:
+            print('havebet')
+            cursor.execute(f"SELECT {date_prefrence}, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID and time.date BETWEEN  '{date_interval[0]}' AND '{date_interval[1]}' GROUP BY {date_prefrence} ORDER BY {date_prefrence} ASC")
+
+        rows = cursor.fetchall()
+        
+        # data_frames = [row[3] for row in rows]
+        
+        data = []
+
+        for row in rows:
+           
+            if len(date_prefrence.split(','))==3:
+                indexdate=f"{row[0]}-{row[1]}-{row[2]}"
+            elif len(date_prefrence.split(','))==2:
+                indexdate=f"{row[0]}-{row[1]}"
+            else:
+                indexdate=f"{row[0]}"
+                
+            datasave={
+                'index_JMA': indexdate,
+                'valeur':row[len(date_prefrence.split(','))]
+            }
+            # datasave = {
+            #     'index_JMA': f"{row[0]}-{row[1]}-{row[2]}",
+            #     'index_MA': f"{row[1]}-{row[2]}",
+            #     'index_A': f"{row[2]}",
+            #     'valeur': row[3]
+            # }
+            data.append(datasave)
+
+        print("data",data)
+        # Créer un DataFrame à partir des données
+        # df = pd.DataFrame(data_frames,columns=[column])
+        # df[column] = df[column].astype(float)
+        # # print(data)
+        df = pd.DataFrame(data)
+        # df['valeur'] = df['valeur'].astype(float)
+        df['valeur'] = pd.to_numeric(df['valeur'], errors='coerce')
+        print(df)
+        # Détecter les points hauts et bas
+        # values = df[column].values
+        # Perform smoothing on the data
+        # alpha = 0.2  # Smoothing parameter
+        data_smoothed = SimpleExpSmoothing(df['valeur']).fit(smoothing_level=self.training_alpha(df['valeur']),optimized=False).fittedvalues
+        peaks = self.save_peaks(data_smoothed)
+        print(data_smoothed)
+        print("Length of peaks in smoothed data:", len(peaks))
+
+        values = df['valeur'].values
+        
+        peaks_unsmoothed = self.save_peaks(values)
+        print("Length of peaks in unsmoothed data:", len(peaks_unsmoothed))
+
+        # Analyser les tendances et les points hauts/bas
+        tend_intervals = self.analyze_tend_intervals( peaks,df,TDate)
+        
+        qualif_tend_intervals =self.qualification(tend_intervals)
+        evenements=self.Evenement(tend_intervals)
+        
+        # delta_t  Différence en jours
+        delta_t=self.delta_t(evenements)
+        # print(delta_t)
+        
+        ecart_temporel=self.ecart_temporel(evenements, delta_t ,0.9)
+        print(ecart_temporel)
+        # # # Convertir le DataFrame en un format JSON compatible
+        # Convertir le DataFrame en une liste de dictionnaires
+        df_json = df.to_json(orient='split')
+        # print(tend_intervals)
+        return qualif_tend_intervals,evenements,df_json
     
     def training_alpha(self,data):
         # Diviser les données en ensembles d'entraînement et de test
