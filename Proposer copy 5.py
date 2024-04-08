@@ -6,16 +6,13 @@ import math
 from statsmodels.tsa.api import SimpleExpSmoothing
 from sklearn.metrics import mean_squared_error
 import itertools
-from CalculeCauslite import CalculeCauslite
+ 
 from CausaleDegree import CausaleDegree
 class event:
-    
-    def __init__(self,ID_e , Measure, pos_dates,RefEvent):
-        self.ID_e=ID_e
+    def __init__(self, Measure, pos_dates,RefEvent):
         self.Measure = Measure
         self.pos_dates = pos_dates
         self.RefEvent=RefEvent
-        
 class Proposer:
     def __init__(self, conn):
         self.conn = conn
@@ -161,7 +158,7 @@ class Proposer:
             })
             
             
-        Di_all=self.CalculeCausa(evenement_all,columns)
+        Di_all=self.CausaleD(evenement_all,columns)
      
         
         
@@ -170,7 +167,7 @@ class Proposer:
         
         results_all.append(data_all)
         # return qualif_tend_intervals,evenements,df_json
-        return results_all,columns
+        return results_all,columns,Di_all
     
     def training_alpha(self,data):
         # Diviser les données en ensembles d'entraînement et de test
@@ -353,36 +350,3 @@ class Proposer:
                     })
 
         return DI_allEvenet
-    
-        
-    def CalculeCausa(self,evenement_all,columns):
-        E_array = []
-
-
-        CalculeCauslite_instance=CalculeCauslite()
-        for index, col in enumerate(columns): 
-            switch = {
-                f"e{index}_1": "Low peak of Weak increase",
-                f"e{index}_2": "High peak of Weak increase",
-                f"e{index}_3": "Low peak of Average increase",
-                f"e{index}_4": "High peak of Average increase",
-                f"e{index}_5": "Low peak of Important increase",
-                f"e{index}_6": "High peak of Important increase",
-
-                f"e{index}_7": "Low peak of Weak decrease",
-                f"e{index}_8": "High peak of Weak decrease",
-                f"e{index}_9": "Low peak of Average decrease",
-                f"e{index}_10": "High peak of Average decrease",
-                f"e{index}_11": "Low peak of Important decrease",
-                f"e{index}_12": "High peak of Important decrease"
-            }
-         
-            for i in range(1, 13):        
-                if f"e{index}_{i}" in evenement_all[col]:
-                        ID_e= switch.get(f"e{index}_{i}", "Invalid event").split("of")[1]+"-"+col
-                        print("dates",col,":",f"e{index}_{i}","", evenement_all[col][f"e{index}_{i}"])
-                        E = event(ID_e,col, evenement_all[col][f"e{index}_{i}"], RefEvent=f"e{index}_{i}")
-                        E_array.append(E)
-        matrice=CalculeCauslite_instance.creation_matrice_influence(E_array)
-        print(matrice)
-        return E_array

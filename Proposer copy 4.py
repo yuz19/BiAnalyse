@@ -6,16 +6,13 @@ import math
 from statsmodels.tsa.api import SimpleExpSmoothing
 from sklearn.metrics import mean_squared_error
 import itertools
-from CalculeCauslite import CalculeCauslite
+ 
 from CausaleDegree import CausaleDegree
 class event:
-    
-    def __init__(self,ID_e , Measure, pos_dates,RefEvent):
-        self.ID_e=ID_e
+    def __init__(self, Measure, pos_dates,RefEvent):
         self.Measure = Measure
         self.pos_dates = pos_dates
         self.RefEvent=RefEvent
-        
 class Proposer:
     def __init__(self, conn):
         self.conn = conn
@@ -59,7 +56,7 @@ class Proposer:
         evenement_all={}
         date_interval=self.DynamiqueFormatDate(date_interval)
         # print(date_interval)
-        for index, column in enumerate(columns):
+        for column in columns:
             cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{column}'")
             row = cursor.fetchall()
             # print(row)
@@ -137,7 +134,7 @@ class Proposer:
             tend_intervals = self.analyze_tend_intervals( peaks,df,TDate)
             
             qualif_tend_intervals =self.qualification(tend_intervals)
-            evenements=self.Evenement(tend_intervals,index)
+            evenements=self.Evenement(tend_intervals)
             
             evenements_tries_par_ref = {}
          
@@ -161,7 +158,7 @@ class Proposer:
             })
             
             
-        Di_all=self.CalculeCausa(evenement_all,columns)
+        Di_all=self.CausaleD(evenement_all,columns)
      
         
         
@@ -170,7 +167,7 @@ class Proposer:
         
         results_all.append(data_all)
         # return qualif_tend_intervals,evenements,df_json
-        return results_all,columns
+        return results_all,columns,Di_all
     
     def training_alpha(self,data):
         # Diviser les données en ensembles d'entraînement et de test
@@ -273,7 +270,7 @@ class Proposer:
             
         return tend_intervals
 
-    def Evenement(self, tend_intervals,index):
+    def Evenement(self, tend_intervals):
         
         Evenement_array = []
         for i, interval in enumerate(tend_intervals, 1):
@@ -288,7 +285,7 @@ class Proposer:
             
             Evenement = {
                 "Evenement": f"{peak_type} peak of {qualif} {status}",
-                "Ref":self.ref_evenement(f"{peak_type} peak of {qualif} {status}",index),
+                "Ref":self.ref_evenement(f"{peak_type} peak of {qualif} {status}"),
                 "Date": date_fin,
                 "Optimum":min_value if interval[f"tendance {i}"]["type"] == 'diminution' else max_value
             }
@@ -296,93 +293,69 @@ class Proposer:
             
         return Evenement_array
     
-    def ref_evenement(self, Evenement, index):
+    def ref_evenement(self, Evenement):
         switch = {
-            "Low peak of Weak increase": f"e{index}_1",
-            "High peak of Weak increase": f"e{index}_2",
-            "Low peak of Average increase": f"e{index}_3",
-            "High peak of Average increase": f"e{index}_4",
-            "Low peak of Important increase": f"e{index}_5",
-            "High peak of Important increase": f"e{index}_6",
+            "Low peak of Weak increase": 'e1',
+            "High peak of Weak increase": 'e2',
+            "Low peak of Average increase": 'e3',
+            "High peak of Average increase": 'e4',
+            "Low peak of Important increase": 'e5',
+            "High peak of Important increase": 'e6',
             
-            "Low peak of Weak decrease": f"e{index}_7",
-            "High peak of Weak decrease": f"e{index}_8",
-            "Low peak of Average decrease": f"e{index}_9",
-            "High peak of Average decrease": f"e{index}_10",
-            "Low peak of Important decrease": f"e{index}_11",
-            "High peak of Important decrease": f"e{index}_12"
+            "Low peak of Weak decrease": 'e7',
+            "High peak of Weak decrease": 'e8',
+            "Low peak of Average decrease": 'e9',
+            "High peak of Average decrease": 'e10',
+            "Low peak of Important decrease": 'e11',
+            "High peak of Important decrease": 'e12'
         }
         
         return switch.get(Evenement, "Invalid event")
-
     
-    def CausaleD(self, evenement_all, columns):
-        DI_allEvenet = []
-        for idx1, col1 in enumerate(columns):
-            print (idx1)
-            print(col1)
-            for idx2, col2 in enumerate(columns):
-                if idx1 < idx2:  # Pour éviter de traiter les paires de colonnes deux fois
-                    event_DI1 = []
-                    for i in range(1, 13):
-                        if f"e{idx1}_{i}"in evenement_all[col1]:
-                            for j in range(1, 13):
-                                if f"e{idx2}_{j}" in evenement_all[col2]:
-                                    e1_cause = event(col1, evenement_all[col1][f"e{idx1}_{i}"], RefEvent=f"e{idx1}_{i}")
-                                    e2_effect = event(col2, evenement_all[col2][f"e{idx2}_{j}"], RefEvent=f"e{idx2}_{j}")
-                                    CausaleDegree_instance = CausaleDegree()
-                                    di_test = CausaleDegree_instance.DI_causal_2(e1_cause, e2_effect)
-                                    print(col1, ',', i, '-', col2, ',', j, ":", di_test)
-                                    event_DI1.append((f"e{idx1}_{i}-e{idx2}_{j}", di_test))
-                    event_DI2 = []
-                    for i in range(1, 13):
-                        if f"e{idx2}_{i}" in evenement_all[col2]:
-                            for j in range(1, 13):
-                                if f"e{idx1}_{j}" in evenement_all[col1]:
-                                    e2_effect = event(col1, evenement_all[col1][f"e{idx1}_{j}"], RefEvent=f"e{idx1}_{j}")
-                                    e1_cause = event(col2, evenement_all[col2][f"e{idx2}_{i}"], RefEvent=f"e{idx2}_{i}")
-                                    CausaleDegree_instance = CausaleDegree()
-                                    di_test = CausaleDegree_instance.DI_causal_2(e1_cause, e2_effect)
-                                    print(col2, ',', i, '-', col1, ',', j, ":", di_test)
-                                    event_DI2.append((f"e{idx2}_{i}-e{idx1}_{j}", di_test))
-
-                    DI_allEvenet.append({
-                        "columns": [col1, col2],
-                        "evenet_DI sens1": event_DI1,
-                        "evenet_DI sens2": event_DI2
-                    })
-
+    def CausaleD(self,evenement_all,columns):
+        # print(evenement_all)
+        DI_allEvenet=[]
+        for col1, col2 in itertools.combinations(columns, 2):  
+            event_DI1=[] 
+            for i in range(1, 13):
+               
+                if  f"e{i}" in evenement_all[col1]:
+                    
+                    for j in range(1, 13):
+                        if f"e{j}" in evenement_all[col2]:
+                            
+                            e1_cause=event(col1,evenement_all[col1][ f"e{i}"],RefEvent= f"e{i}")
+                            e2_effect=event(col2,evenement_all[col2][ f"e{j}"],RefEvent= f"e{j}")
+                            CausaleDegree_instance=CausaleDegree()
+                            di_test=CausaleDegree_instance.DI_causal_2(e1_cause,e2_effect)
+                            print(col1,',',i,'-',col2,',',j,":",di_test)
+                            event_DI1.append((f"e{i}1-e{j}2", di_test))
+            event_DI2=[] 
+            for i in range(1, 13):
+               
+                if  f"e{i}" in evenement_all[col2]:
+                    
+                    for j in range(1, 13):
+                        if f"e{j}" in evenement_all[col1]:
+                            
+                            e2_effect=event(col1,evenement_all[col1][ f"e{j}"],RefEvent= f"e{j}")
+                            e1_cause=event(col2,evenement_all[col2][ f"e{i}"],RefEvent= f"e{i}")
+                            CausaleDegree_instance=CausaleDegree()
+                            di_test=CausaleDegree_instance.DI_causal_2(e1_cause,e2_effect)
+                            print(col2,',',i,'-',col1,',',j,":",di_test)
+                            event_DI2.append((f"e{i}2-e{j}1", di_test))
+                                
+            DI_allEvenet.append({
+                "columns": [col1, col2],
+                "evenet_DI sens1": event_DI1,
+                "evenet_DI sens2": event_DI2
+            })
+      
+ 
+            
+        # E7_cause=event('quantity',evenement_all["quantity"]['e7'],RefEvent="e7")
+        # E2_cause=event('prix_ventes',evenement_all["prix_ventes"]['e2'],RefEvent="e2")
+        # CausaleDegree_instance=CausaleDegree()
+        # di_test=CausaleDegree_instance.DI_causal_2(E7_cause,E2_cause)
+ 
         return DI_allEvenet
-    
-        
-    def CalculeCausa(self,evenement_all,columns):
-        E_array = []
-
-
-        CalculeCauslite_instance=CalculeCauslite()
-        for index, col in enumerate(columns): 
-            switch = {
-                f"e{index}_1": "Low peak of Weak increase",
-                f"e{index}_2": "High peak of Weak increase",
-                f"e{index}_3": "Low peak of Average increase",
-                f"e{index}_4": "High peak of Average increase",
-                f"e{index}_5": "Low peak of Important increase",
-                f"e{index}_6": "High peak of Important increase",
-
-                f"e{index}_7": "Low peak of Weak decrease",
-                f"e{index}_8": "High peak of Weak decrease",
-                f"e{index}_9": "Low peak of Average decrease",
-                f"e{index}_10": "High peak of Average decrease",
-                f"e{index}_11": "Low peak of Important decrease",
-                f"e{index}_12": "High peak of Important decrease"
-            }
-         
-            for i in range(1, 13):        
-                if f"e{index}_{i}" in evenement_all[col]:
-                        ID_e= switch.get(f"e{index}_{i}", "Invalid event").split("of")[1]+"-"+col
-                        print("dates",col,":",f"e{index}_{i}","", evenement_all[col][f"e{index}_{i}"])
-                        E = event(ID_e,col, evenement_all[col][f"e{index}_{i}"], RefEvent=f"e{index}_{i}")
-                        E_array.append(E)
-        matrice=CalculeCauslite_instance.creation_matrice_influence(E_array)
-        print(matrice)
-        return E_array
