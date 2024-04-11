@@ -161,7 +161,7 @@ class Proposer:
             })
             
             
-        Di_all=self.CalculeCausa(evenement_all,columns)
+        matrice,array_Causes=self.CalculeCausa(evenement_all,columns)
      
         
         
@@ -170,7 +170,7 @@ class Proposer:
         
         results_all.append(data_all)
         # return qualif_tend_intervals,evenements,df_json
-        return results_all,columns
+        return results_all,columns,array_Causes
     
     def training_alpha(self,data):
         # Diviser les données en ensembles d'entraînement et de test
@@ -383,6 +383,7 @@ class Proposer:
                         print("dates",col,":",f"e{index}_{i}","", evenement_all[col][f"e{index}_{i}"])
                         E = event(ID_e,col, evenement_all[col][f"e{index}_{i}"], RefEvent=f"e{index}_{i}")
                         E_array.append(E)
-        matrice=CalculeCauslite_instance.creation_matrice_influence(E_array)
+      
+        matrice,array_Causes=CalculeCauslite_instance.creation_matrice_influence(E_array)
         print(matrice)
-        return E_array
+        return matrice,array_Causes

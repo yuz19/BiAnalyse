@@ -40,12 +40,21 @@ class CalculeCauslite:
         # Trier la matrice par ordre descendant
         flattened_matrice = [(i, j, matrice[i][j]) for i in range(len(matrice)) for j in range(len(matrice[i]))]
         sorted_matrice = sorted(flattened_matrice, key=lambda x: x[2], reverse=True)
-
+        array_Causes=[]
+        print("++++ creation array avec relations de causalite : des : ++++")
+        for i in range(len(sorted_matrice)):
+            index_i, index_j, influence_degree = sorted_matrice[i]
+            array_Causes.append({
+                    "causes":f"{E[index_i].ID_e} causes {E[index_j].ID_e} with an Influence Degree of:" ,
+                    "degree":influence_degree
+                })
+        
         # Afficher les 10 premières valeurs de causalité
         print("--------Top 10 des relations de causalité:")
         for i in range(min(10, len(sorted_matrice))):
             index_i, index_j, influence_degree = sorted_matrice[i]
             print(f"{E[index_i].ID_e} causes {E[index_j].ID_e} with an Influence Degree of: {influence_degree}")
+        return  matrice,array_Causes
 
     def calculer_DI_causal_2(self, E1_cause, E2_effect,rate_E):
         i = 0
