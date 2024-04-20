@@ -125,7 +125,8 @@ class Proposer:
             # alpha = 0.2  # Smoothing parameter
             data_smoothed = SimpleExpSmoothing(df['valeur']).fit(smoothing_level=self.training_alpha(df['valeur']),optimized=False).fittedvalues
             peaks = self.save_peaks(data_smoothed)
-            print(data_smoothed)
+            print(len(data))
+    
             print("Length of peaks in smoothed data:", len(peaks))
 
             values = df['valeur'].values
@@ -160,13 +161,17 @@ class Proposer:
                 "evenement":evenements,
             })
             
-            
+            # TRANFER DATA
+            for i, item in enumerate(data_all[column]):
+                item['valeur'] = data_smoothed[i]
+                
         matrice,array_Causes=self.CalculeCausa(evenement_all,columns)
      
         
         
         
         results_all.append(results)
+        
         
         results_all.append(data_all)
         # return qualif_tend_intervals,evenements,df_json
@@ -278,9 +283,13 @@ class Proposer:
         Evenement_array = []
         for i, interval in enumerate(tend_intervals, 1):
             qualif = interval[f"tendance {i}"]["qualification"]
-            peak_type =  "Low" if interval[f"tendance {i}"]["type"] == 'diminution' else "High"
+            # peak_type =  "Low" if interval[f"tendance {i}"]["type"] == 'diminution' else "High"
+            peak_type =  "Low" if interval[f"tendance {i}"]["type"] == 'augmentation' else "High"
+           
             status = "decrease" if interval[f"tendance {i}"]["type"] == 'diminution' else "increase"
-            date_fin = interval[f"tendance {i}"]['interval'][1]['date-fin']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
+            # date_fin = interval[f"tendance {i}"]['interval'][1]['date-fin']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
+            date_debut = interval[f"tendance {i}"]['interval'][0]['date-debut']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
+            
             max_value = max([abs(value["value"]) for i, value in enumerate(interval[f"tendance {i}"]['interval'], 1)])
             min_value = min([abs(value["value"]) for i, value in enumerate(interval[f"tendance {i}"]['interval'], 1)])
             
@@ -289,7 +298,7 @@ class Proposer:
             Evenement = {
                 "Evenement": f"{peak_type} peak of {qualif} {status}",
                 "Ref":self.ref_evenement(f"{peak_type} peak of {qualif} {status}",index),
-                "Date": date_fin,
+                "Date": date_debut,
                 "Optimum":min_value if interval[f"tendance {i}"]["type"] == 'diminution' else max_value
             }
             Evenement_array.append(Evenement)
@@ -299,18 +308,12 @@ class Proposer:
     def ref_evenement(self, Evenement, index):
         switch = {
             "Low peak of Weak increase": f"e{index}_1",
-            "High peak of Weak increase": f"e{index}_2",
-            "Low peak of Average increase": f"e{index}_3",
-            "High peak of Average increase": f"e{index}_4",
-            "Low peak of Important increase": f"e{index}_5",
-            "High peak of Important increase": f"e{index}_6",
+            "Low peak of Average increase": f"e{index}_2",
+            "Low peak of Important increase": f"e{index}_3",
             
-            "Low peak of Weak decrease": f"e{index}_7",
-            "High peak of Weak decrease": f"e{index}_8",
-            "Low peak of Average decrease": f"e{index}_9",
-            "High peak of Average decrease": f"e{index}_10",
-            "Low peak of Important decrease": f"e{index}_11",
-            "High peak of Important decrease": f"e{index}_12"
+            "High peak of Weak decrease": f"e{index}_4",
+            "High peak of Average decrease": f"e{index}_5",
+            "High peak of Important decrease": f"e{index}_6"
         }
         
         return switch.get(Evenement, "Invalid event")
@@ -363,20 +366,18 @@ class Proposer:
         for index, col in enumerate(columns): 
             switch = {
                 f"e{index}_1": "Low peak of Weak increase",
-                f"e{index}_2": "High peak of Weak increase",
-                f"e{index}_3": "Low peak of Average increase",
-                f"e{index}_4": "High peak of Average increase",
-                f"e{index}_5": "Low peak of Important increase",
-                f"e{index}_6": "High peak of Important increase",
-
-                f"e{index}_7": "Low peak of Weak decrease",
-                f"e{index}_8": "High peak of Weak decrease",
-                f"e{index}_9": "Low peak of Average decrease",
-                f"e{index}_10": "High peak of Average decrease",
-                f"e{index}_11": "Low peak of Important decrease",
-                f"e{index}_12": "High peak of Important decrease"
+     
+                f"e{index}_2": "Low peak of Average increase",
+   
+                f"e{index}_3": "Low peak of Important increase",
+      
+                f"e{index}_4": "High peak of Weak decrease",
+       
+                f"e{index}_5": "High peak of Average decrease",
+ 
+                f"e{index}_6": "High peak of Important decrease"
             }
-         
+ 
             for i in range(1, 13):        
                 if f"e{index}_{i}" in evenement_all[col]:
                         ID_e= switch.get(f"e{index}_{i}", "Invalid event").split("of")[1]+"-"+col

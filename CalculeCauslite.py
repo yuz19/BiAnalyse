@@ -65,25 +65,34 @@ class CalculeCauslite:
         if E1_cause.Measure == E2_effect.Measure:
             self.DI = 0
         else:
-            if datetime.strptime(E1_cause.pos_dates[0], '%Y-%m-%d'):
+            if len(E1_cause.pos_dates[0].split("-"))==3:
                 E1_pos_dates = sorted(E1_cause.pos_dates, key=lambda x: datetime.strptime(x, '%Y-%m-%d'), reverse=True)
 
                 
                 E2_pos_dates = sorted(E2_effect.pos_dates, key=lambda x: datetime.strptime(x, '%Y-%m-%d'), reverse=True)
-            elif datetime.strptime(E1_cause.pos_dates[0], '%Y-%m'):
+                
+                E1_pos_dates = [datetime.strptime(date_str, '%Y-%m-%d') for date_str in E1_pos_dates]
+            
+                E2_pos_dates = [datetime.strptime(date_str, '%Y-%m-%d') for date_str in E2_pos_dates]
+            elif len(E1_cause.pos_dates[0].split("-"))==2:
                 E1_pos_dates = sorted(E1_cause.pos_dates, key=lambda x: datetime.strptime(x, '%Y-%m'), reverse=True)
 
                 
                 E2_pos_dates = sorted(E2_effect.pos_dates, key=lambda x: datetime.strptime(x, '%Y-%m'), reverse=True)
-            elif  datetime.strptime(E1_cause.pos_dates[0], '%Y'):
+                
+                E1_pos_dates = [datetime.strptime(date_str, '%Y-%m') for date_str in E1_pos_dates]
+            
+                E2_pos_dates = [datetime.strptime(date_str, '%Y-%m') for date_str in E2_pos_dates]
+            elif  len(E1_cause.pos_dates[0].split("-"))==1:
                 E1_pos_dates = sorted(E1_cause.pos_dates, key=lambda x: datetime.strptime(x, '%Y'), reverse=True)
 
                 
                 E2_pos_dates = sorted(E2_effect.pos_dates, key=lambda x: datetime.strptime(x, '%Y'), reverse=True)
                 
-            E1_pos_dates = [datetime.strptime(date_str, '%Y-%m-%d') for date_str in E1_pos_dates]
+                E1_pos_dates = [datetime.strptime(date_str, '%Y') for date_str in E1_pos_dates]
             
-            E2_pos_dates = [datetime.strptime(date_str, '%Y-%m-%d') for date_str in E2_pos_dates]
+                E2_pos_dates = [datetime.strptime(date_str, '%Y') for date_str in E2_pos_dates]
+
             print(E2_effect.RefEvent,"after",E2_pos_dates)
             end1 = len(E2_pos_dates)                
             T0 = 0
