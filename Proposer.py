@@ -125,14 +125,14 @@ class Proposer:
             # alpha = 0.2  # Smoothing parameter
             data_smoothed = SimpleExpSmoothing(df['valeur']).fit(smoothing_level=self.training_alpha(df['valeur']),optimized=False).fittedvalues
             peaks = self.save_peaks(data_smoothed)
-            print(len(data))
+            # print(len(data))
     
-            print("Length of peaks in smoothed data:", len(peaks))
+            # print("Length of peaks in smoothed data:", len(peaks))
 
             values = df['valeur'].values
             
             peaks_unsmoothed = self.save_peaks(values)
-            print("Length of peaks in unsmoothed data:", len(peaks_unsmoothed))
+            # print("Length of peaks in unsmoothed data:", len(peaks_unsmoothed))
 
             # Analyser les tendances et les points hauts/bas
             tend_intervals = self.analyze_tend_intervals( peaks,df,TDate)
@@ -150,7 +150,9 @@ class Proposer:
                     evenements_tries_par_ref[ref] = []
                 # Ajouter l'événement à la liste correspondante
                 evenements_tries_par_ref[ref].append(evenement["Date"])     
-                    
+
+
+
             evenement_all[column]=evenements_tries_par_ref
 
             
@@ -165,6 +167,111 @@ class Proposer:
             for i, item in enumerate(data_all[column]):
                 item['valeur'] = data_smoothed[i]
                 
+        evenement_externe={
+            "noel": [
+            "2011-12-25",
+            "2012-12-25",
+            "2013-12-25",
+            "2014-12-25",
+            "2015-12-25",
+            "2016-12-25",
+            "2017-12-25",
+            "2018-12-25",
+            "2019-12-25",
+            "2020-12-25",
+            "2021-12-25",
+            "2022-12-25",
+            "2023-12-25",
+            "2024-12-25",
+            "2025-12-25"
+            ],
+            "jour_de_l_an": [
+            "2011-01-01",
+            "2012-01-01",
+            "2013-01-01",
+            "2014-01-01",
+            "2015-01-01",
+            "2016-01-01",
+            "2017-01-01",
+            "2018-01-01",
+            "2019-01-01",
+            "2020-01-01",
+            "2021-01-01",
+            "2022-01-01",
+            "2023-01-01",
+            "2024-01-01",
+            "2025-01-01"
+            ],
+            "halloween": [
+            "2011-10-31",
+            "2012-10-31",
+            "2013-10-31",
+            "2014-10-31",
+            "2015-10-31",
+            "2016-10-31",
+            "2017-10-31",
+            "2018-10-31",
+            "2019-10-31",
+            "2020-10-31",
+            "2021-10-31",
+            "2022-10-31",
+            "2023-10-31",
+            "2024-10-31",
+            "2025-10-31"
+            ],
+            "fete_nationale": [
+            "2011-07-14",
+            "2012-07-14",
+            "2013-07-14",
+            "2014-07-14",
+            "2015-07-14",
+            "2016-07-14",
+            "2017-07-14",
+            "2018-07-14",
+            "2019-07-14",
+            "2020-07-14",
+            "2021-07-14",
+            "2022-07-14",
+            "2023-07-14",
+            "2024-07-14",
+            "2025-07-14"
+            ],
+            "saint_valentin": [
+            "2011-02-14",
+            "2012-02-14",
+            "2013-02-14",
+            "2014-02-14",
+            "2015-02-14",
+            "2016-02-14",
+            "2017-02-14",
+            "2018-02-14",
+            "2019-02-14",
+            "2020-02-14",
+            "2021-02-14",
+            "2022-02-14",
+            "2023-02-14",
+            "2024-02-14",
+            "2025-02-14"
+            ],
+            "yennayer": [
+            "2011-01-12",
+            "2012-01-12",
+            "2013-01-12",
+            "2014-01-12",
+            "2015-01-12",
+            "2016-01-12",
+            "2017-01-12",
+            "2018-01-12",
+            "2019-01-12",
+            "2020-01-12",
+            "2021-01-12",
+            "2022-01-12",
+            "2023-01-12",
+            "2024-01-12",
+            "2025-01-12"
+            ]
+        }     
+        evenement_all["externe"]=evenement_externe
         matrice,array_Causes=self.CalculeCausa(evenement_all,columns)
      
         
@@ -322,8 +429,8 @@ class Proposer:
     def CausaleD(self, evenement_all, columns):
         DI_allEvenet = []
         for idx1, col1 in enumerate(columns):
-            print (idx1)
-            print(col1)
+            # print (idx1)
+            # print(col1)
             for idx2, col2 in enumerate(columns):
                 if idx1 < idx2:  # Pour éviter de traiter les paires de colonnes deux fois
                     event_DI1 = []
@@ -335,7 +442,7 @@ class Proposer:
                                     e2_effect = event(col2, evenement_all[col2][f"e{idx2}_{j}"], RefEvent=f"e{idx2}_{j}")
                                     CausaleDegree_instance = CausaleDegree()
                                     di_test = CausaleDegree_instance.DI_causal_2(e1_cause, e2_effect)
-                                    print(col1, ',', i, '-', col2, ',', j, ":", di_test)
+                                    # print(col1, ',', i, '-', col2, ',', j, ":", di_test)
                                     event_DI1.append((f"e{idx1}_{i}-e{idx2}_{j}", di_test))
                     event_DI2 = []
                     for i in range(1, 13):
@@ -346,7 +453,7 @@ class Proposer:
                                     e1_cause = event(col2, evenement_all[col2][f"e{idx2}_{i}"], RefEvent=f"e{idx2}_{i}")
                                     CausaleDegree_instance = CausaleDegree()
                                     di_test = CausaleDegree_instance.DI_causal_2(e1_cause, e2_effect)
-                                    print(col2, ',', i, '-', col1, ',', j, ":", di_test)
+                                    # print(col2, ',', i, '-', col1, ',', j, ":", di_test)
                                     event_DI2.append((f"e{idx2}_{i}-e{idx1}_{j}", di_test))
 
                     DI_allEvenet.append({
@@ -361,30 +468,38 @@ class Proposer:
     def CalculeCausa(self,evenement_all,columns):
         E_array = []
 
-
+        print(evenement_all)
         CalculeCauslite_instance=CalculeCauslite()
         for index, col in enumerate(columns): 
+ 
             switch = {
                 f"e{index}_1": "Low peak of Weak increase",
-     
+    
                 f"e{index}_2": "Low peak of Average increase",
-   
+
                 f"e{index}_3": "Low peak of Important increase",
-      
+    
                 f"e{index}_4": "High peak of Weak decrease",
-       
+    
                 f"e{index}_5": "High peak of Average decrease",
- 
+
                 f"e{index}_6": "High peak of Important decrease"
             }
- 
+
             for i in range(1, 13):        
                 if f"e{index}_{i}" in evenement_all[col]:
                         ID_e= switch.get(f"e{index}_{i}", "Invalid event").split("of")[1]+"-"+col
-                        print("dates",col,":",f"e{index}_{i}","", evenement_all[col][f"e{index}_{i}"])
+                        # print("dates",col,":",f"e{index}_{i}","", evenement_all[col][f"e{index}_{i}"])
                         E = event(ID_e,col, evenement_all[col][f"e{index}_{i}"], RefEvent=f"e{index}_{i}")
                         E_array.append(E)
-      
+ 
+
+        print("Event externe")
+        for index,evenetE in evenement_all['externe'].items():
+            E = event(index,"externe", evenetE, RefEvent=index)
+            print(E.ID_e)  
+            E_array.append(E)
+            
         matrice,array_Causes=CalculeCauslite_instance.creation_matrice_influence(E_array)
-        print(matrice)
+        # print(matrice)
         return matrice,array_Causes

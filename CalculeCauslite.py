@@ -14,20 +14,20 @@ class CalculeCauslite:
                     matrice[i][j] = self.calculer_DI_causal_2(E[i], E[j], 0.9)
 
         # Affichage de la matrice de causalité
-        print("--------la matrice de causalité")
-        for row in matrice:
-            print(" ".join(map(str, row)))
+        # print("--------la matrice de causalité")
+        # for row in matrice:
+        #     print(" ".join(map(str, row)))
         # Affichage de la matrice de causalité avec les événements Ei et Ej
-        print("--------la matrice de causalité")
-        print("    ", end="")
-        for i in range(len(E)):
-            print(E[i].RefEvent, end=" ")
-        print()  # New line
-        for i in range(len(E)):
-            print(E[i].RefEvent, end="")
-            for j in range(len(E)):
-                print(matrice[i][j], end=" ")
-            print()  # New line
+        # print("--------la matrice de causalité")
+        # print("    ", end="")
+        # for i in range(len(E)):
+        #     print(E[i].RefEvent, end=" ")
+        # print()  # New line
+        # for i in range(len(E)):
+        #     print(E[i].RefEvent, end="")
+        #     for j in range(len(E)):
+        #         print(matrice[i][j], end=" ")
+        #     print()  # New line
 
         # Interprétation de la matrice
         print("-------Interprétation de la matrice")
@@ -45,15 +45,17 @@ class CalculeCauslite:
         for i in range(len(sorted_matrice)):
             index_i, index_j, influence_degree = sorted_matrice[i]
             array_Causes.append({
+                
                     "causes":f"{E[index_i].ID_e} causes {E[index_j].ID_e} with an Influence Degree of:" ,
-                    "degree":influence_degree
+                    "degree":influence_degree,
+                    "mesure":E[index_i].Measure
                 })
         
         # Afficher les 10 premières valeurs de causalité
-        print("--------Top 10 des relations de causalité:")
-        for i in range(min(10, len(sorted_matrice))):
-            index_i, index_j, influence_degree = sorted_matrice[i]
-            print(f"{E[index_i].ID_e} causes {E[index_j].ID_e} with an Influence Degree of: {influence_degree}")
+        # print("--------Top 10 des relations de causalité:")
+        # for i in range(min(10, len(sorted_matrice))):
+        #     index_i, index_j, influence_degree = sorted_matrice[i]
+        #     print(f"{E[index_i].ID_e} causes {E[index_j].ID_e} with an Influence Degree of: {influence_degree}")
         return  matrice,array_Causes
 
     def calculer_DI_causal_2(self, E1_cause, E2_effect,rate_E):
@@ -93,7 +95,7 @@ class CalculeCauslite:
             
                 E2_pos_dates = [datetime.strptime(date_str, '%Y') for date_str in E2_pos_dates]
 
-            print(E2_effect.RefEvent,"after",E2_pos_dates)
+            # print(E2_effect.RefEvent,"after",E2_pos_dates)
             end1 = len(E2_pos_dates)                
             T0 = 0
 
@@ -105,7 +107,7 @@ class CalculeCauslite:
                 # print("T0",T0)
                 
                 T0=self.convertToDate(str(T0))
-                print(E2_effect.Measure,":",E2_effect.RefEvent,",",E2_pos_dates[0],'',E2_pos_dates[end1 - 1],"T0 changed",T0)
+                # print(E2_effect.Measure,":",E2_effect.RefEvent,",",E2_pos_dates[0],'',E2_pos_dates[end1 - 1],"T0 changed",T0)
             Mu = (-math.log(1 -rate_E)) / T0
         
             for i in range(len(E2_pos_dates)):
@@ -121,7 +123,7 @@ class CalculeCauslite:
                         j += 1
                 t = 0
             self.DI = sum / end1 if end1 != 0 else 0
-            print("mu",Mu,"DI",self.DI)
+            # print("mu",Mu,"DI",self.DI)
             
         return self.DI
         
