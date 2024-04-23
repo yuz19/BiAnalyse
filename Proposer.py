@@ -24,10 +24,10 @@ class Proposer:
         cursor.execute("SELECT date FROM time LIMIT 1")
         row = cursor.fetchone()
 
-        if row:
+        if row and len(date_interval)==2:
             # Récupérer la valeur de la colonne de date
             date_value = str(row[0])
-            date_interval = [datetime.strptime(date_str, "%d/%m/%Y") for date_str in date_interval]
+            date_interval = [datetime.strptime(str(date_str), "%Y-%m-%d") for date_str in date_interval]
             # Vérifier si la colonne de date contient le caractère /
             if '/' in date_value:
                 date_components = date_value.split('/')
@@ -51,12 +51,66 @@ class Proposer:
                     date_interval = [date_str.strftime("%d-%m-%Y") for date_str in date_interval]
 
         return date_interval
+    def getDimension(self,cursor,table_name,col):
+         
+        dim={}
+        # Query to retrieve primary key columns for the specified table
+        cursor.execute(f"SELECT distinct column_name  FROM information_schema.columns WHERE table_name = '{table_name}' AND column_key = 'PRI'")
+        primary_keys = cursor.fetchall()
+        
+        # Extract column names from the result
+        primary_key_columns = [row[0] for row in primary_keys]
+        column_names_str = ", ".join(primary_key_columns)
+        
+        # select pk with their top high mesure
+        # cursor.execute(f"SELECT {column_names_str} from ")
+        
+        # print(table_name,":",primary_key_columns)
+        for pk_column in primary_key_columns:
+            print("Primary Key:", pk_column)
+
+            # Query to get tables and columns where the primary key column is a foreign key
+ 
+            cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{pk_column}' AND column_key = 'PRI' AND TABLE_NAME NOT IN (SELECT TABLE_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE COLUMN_NAME = '{pk_column}' AND REFERENCED_TABLE_NAME IS NOT NULL)")
+
+
+            row = cursor.fetchall()
+            # print("test",row)
+            if row[0][0] and (row[0][0]!="time" and row[0][0]!="date"):
+                
+                table_name2 = row[0][0]
+
+                cursor.execute(f"SELECT DISTINCT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name2}'  AND COLUMN_NAME NOT IN (SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name2}' AND COLUMN_KEY = 'PRI')")
+                rows = cursor.fetchall()
+                columns=[row[0] for row in rows]
+                # Define the array of banned words
+                banned_words = ["code_postal"]
+
+                # Filter the columns list based on banned words
+                filtered_columns = [column for column in columns if column not in banned_words]
+                # Print the tables and their corresponding columns
+                dim[table_name2]=filtered_columns
+      
+        return  dim
+    def selectDimension(self,cursor,dimension_all):
+        for mesure,dim   in dimension_all.items():
+ 
+            print(mesure,":",dim)
+            for table_name,cols in dim.items():
+                column_names_str = ", ".join(cols)
+                cursor.execute(f"SELECT {column_names_str} FROM {table_name} ORDER BY {column_names_str} ASC LIMIT 30")
+                rows = cursor.fetchall()
+                for row in rows:
+                    print(row)
+        return
+        
     def start(self, columns,TDate,date_prefrence,date_interval):
         cursor = self.conn.cursor()
         results_all=[]
         results=[]
         data_all={}
         evenement_all={}
+        dimension_all={}
         date_interval=self.DynamiqueFormatDate(date_interval)
         # print(date_interval)
         for index, column in enumerate(columns):
@@ -65,6 +119,8 @@ class Proposer:
             # print(row)
             table_name = row[0][0]
             # print("table name", table_name)
+            dimension_all[column]=self.getDimension(cursor,table_name,column)
+            
             data_frames=[]
 
             
@@ -279,7 +335,8 @@ class Proposer:
         
         results_all.append(results)
         
-        
+        # print(dimension_all)
+        print(self.selectDimension(cursor,dimension_all))
         results_all.append(data_all)
         # return qualif_tend_intervals,evenements,df_json
         return results_all,columns,array_Causes
@@ -468,7 +525,7 @@ class Proposer:
     def CalculeCausa(self,evenement_all,columns):
         E_array = []
 
-        print(evenement_all)
+        # print(evenement_all)
         CalculeCauslite_instance=CalculeCauslite()
         for index, col in enumerate(columns): 
  
@@ -494,10 +551,10 @@ class Proposer:
                         E_array.append(E)
  
 
-        print("Event externe")
+        # print("Event externe")
         for index,evenetE in evenement_all['externe'].items():
             E = event(index,"externe", evenetE, RefEvent=index)
-            print(E.ID_e)  
+            # print(E.ID_e)  
             E_array.append(E)
             
         matrice,array_Causes=CalculeCauslite_instance.creation_matrice_influence(E_array)

@@ -19,7 +19,8 @@ class Granger:
         if row:
             # Récupérer la valeur de la colonne de date
             date_value = str(row[0])
-            date_interval = [datetime.strptime(date_str, "%d/%m/%Y") for date_str in date_interval]
+           
+            date_interval = [datetime.strptime(str(date_str), "%Y-%m-%d") for date_str in date_interval]
             # Vérifier si la colonne de date contient le caractère /
             if '/' in date_value:
                 date_components = date_value.split('/')
