@@ -62,47 +62,84 @@ class Proposer:
         primary_key_columns = [row[0] for row in primary_keys]
         column_names_str = ", ".join(primary_key_columns)
         
-        # select pk with their top high mesure
-        # cursor.execute(f"SELECT {column_names_str} from ")
+
         
         # print(table_name,":",primary_key_columns)
+        pk_data={}
+        mesure_pK_data={}
+        banned_words=["date_id","time_id","id_date","id_time"]
         for pk_column in primary_key_columns:
-            print("Primary Key:", pk_column)
+            pklower=pk_column.lower() 
+            if pklower not in banned_words: 
+                print("Primary Key:", pk_column)
+                # select pk with their top high mesure
+                cursor.execute(f"SELECT  {pk_column} from {table_name} ORDER BY {col} ASC LIMIT 30")
+                rows=cursor.fetchall()
 
-            # Query to get tables and columns where the primary key column is a foreign key
- 
-            cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{pk_column}' AND column_key = 'PRI' AND TABLE_NAME NOT IN (SELECT TABLE_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE COLUMN_NAME = '{pk_column}' AND REFERENCED_TABLE_NAME IS NOT NULL)")
+    
+                pk_data[pk_column]=[row[0] for row in rows]
+    
+                # Query to get tables and columns where the primary key column is a foreign key
+    
+                cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{pk_column}' AND column_key = 'PRI' AND TABLE_NAME NOT IN (SELECT TABLE_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE COLUMN_NAME = '{pk_column}' AND REFERENCED_TABLE_NAME IS NOT NULL)")
 
 
-            row = cursor.fetchall()
-            # print("test",row)
-            if row[0][0] and (row[0][0]!="time" and row[0][0]!="date"):
-                
-                table_name2 = row[0][0]
+                row = cursor.fetchall()
+                # print("test",row)
+                if row[0][0] and (row[0][0]!="time" and row[0][0]!="date"):
+                    
+                    table_name2 = row[0][0]
 
-                cursor.execute(f"SELECT DISTINCT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name2}'  AND COLUMN_NAME NOT IN (SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name2}' AND COLUMN_KEY = 'PRI')")
-                rows = cursor.fetchall()
-                columns=[row[0] for row in rows]
-                # Define the array of banned words
-                banned_words = ["code_postal"]
+                    cursor.execute(f"SELECT DISTINCT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name2}'  AND COLUMN_NAME NOT IN (SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name2}' AND COLUMN_KEY = 'PRI')")
+                    rows = cursor.fetchall()
+                    columns=[row[0] for row in rows]
+                    # Define the array of banned words
+                    banned_words2 = ["code_postal"]
 
-                # Filter the columns list based on banned words
-                filtered_columns = [column for column in columns if column not in banned_words]
-                # Print the tables and their corresponding columns
-                dim[table_name2]=filtered_columns
-      
-        return  dim
+                    # Filter the columns list based on banned words
+                    filtered_columns = [column for column in columns if column.lower() not in banned_words2]
+                    # Print the tables and their corresponding columns
+                    dim[table_name2]=filtered_columns
+        
+        return  dim,pk_data
     def selectDimension(self,cursor,dimension_all):
-        for mesure,dim   in dimension_all.items():
- 
-            print(mesure,":",dim)
-            for table_name,cols in dim.items():
+        selectMesure={}
+
+        for mesure,dim_keys   in dimension_all.items():
+            selectTable={}
+             
+            print(mesure,":",dim_keys)
+            
+            dim_keys_toManipulate=dim_keys
+            
+            for table_name,cols in dim_keys[0].items():
+         
+                
                 column_names_str = ", ".join(cols)
-                cursor.execute(f"SELECT {column_names_str} FROM {table_name} ORDER BY {column_names_str} ASC LIMIT 30")
+                where_conditions = []
+                first_pk, first_values = next(iter(dim_keys_toManipulate[1].items()))
+                print(first_pk,"pk",first_values)
+ 
+             
+         
+ 
+                # Build WHERE conditions for each primary key-value pair
+                where_conditions.append(f"{first_pk} IN ({', '.join(map(lambda x: f'\'{x}\'', first_values))})")
+
+                # select column_names_str from table_name where all value pk are in values
+                 # Construct the SQL query
+                # print("query", f"SELECT {column_names_str} FROM {table_name} WHERE {where_conditions[0]}")
+                cursor.execute( f"SELECT {column_names_str} FROM {table_name} WHERE {where_conditions[0]}")
+
                 rows = cursor.fetchall()
-                for row in rows:
-                    print(row)
-        return
+                print(rows)
+                if (rows):
+                    selectTable[table_name]=[row for row in rows]
+                # remove first element
+                dim_keys_toManipulate[1].pop(first_pk)
+              
+            selectMesure[mesure]=selectTable
+        return selectMesure
         
     def start(self, columns,TDate,date_prefrence,date_interval):
         cursor = self.conn.cursor()
@@ -336,10 +373,12 @@ class Proposer:
         results_all.append(results)
         
         # print(dimension_all)
-        print(self.selectDimension(cursor,dimension_all))
+        # print(self.selectDimension(cursor,dimension_all))
+        selectDim=self.selectDimension(cursor,dimension_all)
+        
         results_all.append(data_all)
         # return qualif_tend_intervals,evenements,df_json
-        return results_all,columns,array_Causes
+        return results_all,columns,array_Causes,selectDim
     
     def training_alpha(self,data):
         # Diviser les données en ensembles d'entraînement et de test
@@ -451,8 +490,8 @@ class Proposer:
             peak_type =  "Low" if interval[f"tendance {i}"]["type"] == 'augmentation' else "High"
            
             status = "decrease" if interval[f"tendance {i}"]["type"] == 'diminution' else "increase"
-            # date_fin = interval[f"tendance {i}"]['interval'][1]['date-fin']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
-            date_debut = interval[f"tendance {i}"]['interval'][0]['date-debut']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
+            date_fin = interval[f"tendance {i}"]['interval'][1]['date-fin']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
+            # date_debut = interval[f"tendance {i}"]['interval'][0]['date-debut']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
             
             max_value = max([abs(value["value"]) for i, value in enumerate(interval[f"tendance {i}"]['interval'], 1)])
             min_value = min([abs(value["value"]) for i, value in enumerate(interval[f"tendance {i}"]['interval'], 1)])
@@ -462,7 +501,7 @@ class Proposer:
             Evenement = {
                 "Evenement": f"{peak_type} peak of {qualif} {status}",
                 "Ref":self.ref_evenement(f"{peak_type} peak of {qualif} {status}",index),
-                "Date": date_debut,
+                "Date": date_fin,
                 "Optimum":min_value if interval[f"tendance {i}"]["type"] == 'diminution' else max_value
             }
             Evenement_array.append(Evenement)
