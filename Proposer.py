@@ -485,26 +485,27 @@ class Proposer:
         
         Evenement_array = []
         for i, interval in enumerate(tend_intervals, 1):
-            qualif = interval[f"tendance {i}"]["qualification"]
-            # peak_type =  "Low" if interval[f"tendance {i}"]["type"] == 'diminution' else "High"
-            peak_type =  "Low" if interval[f"tendance {i}"]["type"] == 'augmentation' else "High"
-           
-            status = "decrease" if interval[f"tendance {i}"]["type"] == 'diminution' else "increase"
-            date_fin = interval[f"tendance {i}"]['interval'][1]['date-fin']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
-            # date_debut = interval[f"tendance {i}"]['interval'][0]['date-debut']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
+            if interval[f"tendance {i}"]["type"] !="static":
+                qualif = interval[f"tendance {i}"]["qualification"]
+                peak_type =  "High" if interval[f"tendance {i}"]["type"] == 'diminution' else "Low"
+                # peak_type =  "Low" if interval[f"tendance {i}"]["type"] == 'augmentation' else "High"
             
-            max_value = max([abs(value["value"]) for i, value in enumerate(interval[f"tendance {i}"]['interval'], 1)])
-            min_value = min([abs(value["value"]) for i, value in enumerate(interval[f"tendance {i}"]['interval'], 1)])
-            
+                status = "decrease" if interval[f"tendance {i}"]["type"] == 'diminution' else "increase"
+                date_fin = interval[f"tendance {i}"]['interval'][1]['date-fin']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
+                # date_debut = interval[f"tendance {i}"]['interval'][0]['date-debut']  # Accéder à la clé 'date-fin' du deuxième élément de la liste 'interval'
+                
+                max_value = max([abs(value["value"]) for i, value in enumerate(interval[f"tendance {i}"]['interval'], 1)])
+                min_value = min([abs(value["value"]) for i, value in enumerate(interval[f"tendance {i}"]['interval'], 1)])
+                
 
-            
-            Evenement = {
-                "Evenement": f"{peak_type} peak of {qualif} {status}",
-                "Ref":self.ref_evenement(f"{peak_type} peak of {qualif} {status}",index),
-                "Date": date_fin,
-                "Optimum":min_value if interval[f"tendance {i}"]["type"] == 'diminution' else max_value
-            }
-            Evenement_array.append(Evenement)
+                
+                Evenement = {
+                    "Evenement": f"{peak_type} peak of {qualif} {status}",
+                    "Ref":self.ref_evenement(f"{peak_type} peak of {qualif} {status}",index),
+                    "Date": date_fin,
+                    "Optimum":min_value if interval[f"tendance {i}"]["type"] == 'diminution' else max_value
+                }
+                Evenement_array.append(Evenement)
             
         return Evenement_array
     
@@ -581,7 +582,8 @@ class Proposer:
 
                 f"e{index}_6": "High peak of Important decrease"
             }
-
+ 
+        
             for i in range(1, 13):        
                 if f"e{index}_{i}" in evenement_all[col]:
                         ID_e= switch.get(f"e{index}_{i}", "Invalid event").split("of")[1]+"-"+col
