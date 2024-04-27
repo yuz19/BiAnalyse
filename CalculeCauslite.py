@@ -10,7 +10,7 @@ class CalculeCauslite:
         # Remplir la matrice avec les valeurs de causalité
         for i in range(len(E)):
             for j in range(len(E)):
-                if i != j:
+                if i != j and E[j].Measure!="externe":
                     matrice[i][j] = self.calculer_DI_causal_2(E[i], E[j], 0.9)
 
         # Affichage de la matrice de causalité
