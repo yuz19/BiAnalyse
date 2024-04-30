@@ -15,6 +15,8 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/analyse/*": {"origins": "*"}})
 CORS(app, resources={r"/api/sql/*": {"origins": "*"}})
 CORS(app, resources={r"/api/getMesure/*": {"origins": "*"}})
+CORS(app, resources={r"/api/check_connection/*": {"origins": "*"}})
+
 
 
 array_return=[]
@@ -78,8 +80,9 @@ def analyse():
         else:
             return jsonify({"Error": "Choisir un algorithme"}), 400
     
-    elif request.method == 'GET':
-        return jsonify(array_return), 200
+    # elif request.method == 'GET':
+    #     # array_return = []
+    #     return jsonify(array_return), 200
     else:
         return jsonify({"Error": "Choisir un algorithme"}), 400
 
@@ -154,6 +157,12 @@ def connect_to_mysql():
     else:
         return jsonify({'error': 'Méthode non autorisée'}), 405
 
+@app.route('/api/check_connection/', methods=['GET'])
+def check_connection():
+    if conn and conn.is_connected():
+        return jsonify({'connected': True, 'connection_info': connection_info}), 200
+    else:
+        return jsonify({'connected': False}), 200
 
 # Reconnexion MySQL
 @app.route('/api/resql/', methods=['POST'])
