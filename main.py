@@ -131,7 +131,7 @@ def connect_to_mysql():
             else:
                 return jsonify({'error': 'Impossible de se connecter à MySQL'}), 500
         except mysql.connector.Error as e:
-            return jsonify({'error': f'Erreur de connexion à MySQL : {str(e)}'}), 500
+            return jsonify({'error': f'Erreur de connexion à MySQL : {str(e)}'}), 301 
         # else:
         #     print("test")
         #     try:
