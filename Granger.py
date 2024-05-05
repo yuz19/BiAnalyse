@@ -118,21 +118,35 @@ class Granger:
         print("Shape of DataFrame:")
         print(df.shape)
         
-
+        
         # Replace missing values with the mean of each column
         df = df.fillna(df.mean())
         # Effectuer le test de causalité de Granger pour chaque colonne dans cette table
         max_lag = 5  # Choisissez le nombre maximal de retards à tester
         results_all=[]
+        error=""
         for col1, col2 in itertools.combinations(self.columns, 2):   
              
             # Perform the Granger causality test
             try:
                 results= grangercausalitytests(df[[col1,col2]], max_lag, verbose=True)
+            except ValueError as e:
+                # Check if the exception message contains "Insufficient observations."
+                if "Insufficient observations." in str(e):
+                    # Handle the case of insufficient observations
+                    error=" (Insufficient Data )"
+                    results= None
+
+                else:
+                    # Handle other ValueError cases
+                    print("Other ValueError occurred:", e)
             except Exception as e:
-                print("Error during Granger causality test:")
-                print(e)
+                # Handle other types of exceptions
+                print("An unexpected error occurred:", e)
+         
+
                 results= None
+         
 
             test_F_values = []
             p_values = []
@@ -164,7 +178,7 @@ class Granger:
             if significant_lags:
                 affichage_granger.append(f'Causalité trouvée pour au moins un délai : {significant_lags}')
             else:
-                affichage_granger.append('Aucune causalité trouvée pour tous les délais testés.')
+                affichage_granger.append(f'Aucune causalité trouvée pour tous les délais testés.{error}')
 
             # # Imprimer les résultats d'affichage
             # for affichage in affichage_granger:
