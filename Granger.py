@@ -81,11 +81,19 @@ class Granger:
                     cursor.execute(f"SELECT {date_prefrence}, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID and time.date BETWEEN  '{date_interval[0]}' AND '{date_interval[1]}' GROUP BY {date_prefrence} ORDER BY {date_prefrence} ASC")
 
                 rows = cursor.fetchall()
- 
-                if column in data_frames:
-                    data_frames[column].extend([row[len(date_prefrence.split(','))] for row in rows])
+                date_prefrence_STATIC="annee, mois, jour"
+                if len(date_interval)==0:
+                    cursor.execute(f"SELECT {date_prefrence_STATIC}, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID GROUP BY {date_prefrence_STATIC} ORDER BY {date_prefrence_STATIC} ASC")
                 else:
-                    data_frames[column] = [row[len(date_prefrence.split(','))] for row in rows]
+                    cursor.execute(f"SELECT {date_prefrence_STATIC}, SUM({column}) FROM {table_name},time WHERE time.date_ID={table_name}.date_ID and time.date BETWEEN  '{date_interval[0]}' AND '{date_interval[1]}' GROUP BY {date_prefrence_STATIC} ORDER BY {date_prefrence_STATIC} ASC")
+
+                rows1 = cursor.fetchall()
+                
+                
+                if column in data_frames:
+                    data_frames[column].extend([row[len(date_prefrence_STATIC.split(','))] for row in rows1])
+                else:
+                    data_frames[column] = [row[len(date_prefrence_STATIC.split(','))] for row in rows1]
 
                 for  row in rows:
                     # datasave={
@@ -125,6 +133,7 @@ class Granger:
         max_lag = 5  # Choisissez le nombre maximal de retards à tester
         results_all=[]
         error=""
+        
         for col1, col2 in itertools.combinations(self.columns, 2):   
              
             # Perform the Granger causality test
