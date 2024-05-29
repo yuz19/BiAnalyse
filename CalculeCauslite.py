@@ -14,20 +14,20 @@ class CalculeCauslite:
                     matrice[i][j] = self.calculer_DI_causal_2(E[i], E[j], 0.9)
 
         # Affichage de la matrice de causalité
-        # print("--------la matrice de causalité")
-        # for row in matrice:
-        #     print(" ".join(map(str, row)))
+        print("--------la matrice de causalité")
+        for row in matrice:
+            print(" ".join(map(str, row)))
         # Affichage de la matrice de causalité avec les événements Ei et Ej
-        # print("--------la matrice de causalité")
-        # print("    ", end="")
-        # for i in range(len(E)):
-        #     print(E[i].RefEvent, end=" ")
-        # print()  # New line
-        # for i in range(len(E)):
-        #     print(E[i].RefEvent, end="")
-        #     for j in range(len(E)):
-        #         print(matrice[i][j], end=" ")
-        #     print()  # New line
+        print("--------la matrice de causalité")
+        print("    ", end="")
+        for i in range(len(E)):
+            print(E[i].RefEvent, end=" ")
+        print()  # New line
+        for i in range(len(E)):
+            print(E[i].RefEvent, end="")
+            for j in range(len(E)):
+                print(matrice[i][j], end=" ")
+            print()  # New line
 
         # Interprétation de la matrice
         print("-------Interprétation de la matrice")

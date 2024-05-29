@@ -44,8 +44,8 @@ if table_name:
         else:
             data_frames[column] = [row[len(date_preference_static.split(','))] for row in rows]
 
-# Query and process the 'retour_Quantity' column
-column = "retour_Quantity"
+# Query and process the 'reduction' column
+column = "reduction"
 cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{column}'")
 row = cursor.fetchone()
 table_name = row[0] if row else None
@@ -77,7 +77,7 @@ df = df.fillna(df.mean())
 
 # Define columns for the Granger causality test
 col1 = "quantity"
-col2 = "retour_Quantity"
+col2 = "reduction"
 
 max_lag = 5  # Choose the maximum number of lags to test
 results_all = []
@@ -362,17 +362,19 @@ def CalculeCausa(evenement_all,columns):
     
         for i in range(1, 13):        
             if f"e{index}_{i}" in evenement_all[col]:
-                    ID_e= switch.get(f"e{index}_{i}", "Invalid event").split("of")[1]+"-"+col
-                    # print("dates",col,":",f"e{index}_{i}","", evenement_all[col][f"e{index}_{i}"])
-                    E = event(ID_e,col, evenement_all[col][f"e{index}_{i}"], RefEvent=f"e{index}_{i}")
-                    E_array.append(E)
+                print("list")
+                print(f"e{index}_{i}")
+                ID_e= switch.get(f"e{index}_{i}", "Invalid event").split("of")[1]+"-"+col
+                # print("dates",col,":",f"e{index}_{i}","", evenement_all[col][f"e{index}_{i}"])
+                E = event(ID_e,col, evenement_all[col][f"e{index}_{i}"], RefEvent=f"e{index}_{i}")
+                E_array.append(E)
 
 
-    # print("Event externe")
-    for index,evenetE in evenement_all['externe'].items():
-        E = event(index,"externe", evenetE, RefEvent=index)
-        # print(E.ID_e)  
-        E_array.append(E)
+    # # print("Event externe")
+    # for index,evenetE in evenement_all['externe'].items():
+    #     E = event(index,"externe", evenetE, RefEvent=index)
+    #     # print(E.ID_e)  
+    #     E_array.append(E)
         
     matrice,array_Causes=CalculeCauslite_instance.creation_matrice_influence(E_array)
     # print(matrice)
@@ -387,7 +389,7 @@ dimension_all={}
 TDate="index_JMA"
  
 # print(date_interval)
-columns=["quantity","retour_Quantity"]
+columns=["quantity","reduction"]
 for index, column in enumerate(columns):
     cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{column}'")
     row = cursor.fetchall()
@@ -486,120 +488,29 @@ for index, column in enumerate(columns):
     
  
         
-evenement_externe={
-    "noel": [
-    "2011-12-25",
-    "2012-12-25",
-    "2013-12-25",
-    "2014-12-25",
-    "2015-12-25",
-    "2016-12-25",
-    "2017-12-25",
-    "2018-12-25",
-    "2019-12-25",
-    "2020-12-25",
-    "2021-12-25",
-    "2022-12-25",
-    "2023-12-25",
-    "2024-12-25",
-    "2025-12-25"
-    ],
-    "jour_de_l_an": [
-    "2011-01-01",
-    "2012-01-01",
-    "2013-01-01",
-    "2014-01-01",
-    "2015-01-01",
-    "2016-01-01",
-    "2017-01-01",
-    "2018-01-01",
-    "2019-01-01",
-    "2020-01-01",
-    "2021-01-01",
-    "2022-01-01",
-    "2023-01-01",
-    "2024-01-01",
-    "2025-01-01"
-    ],
-    "halloween": [
-    "2011-10-31",
-    "2012-10-31",
-    "2013-10-31",
-    "2014-10-31",
-    "2015-10-31",
-    "2016-10-31",
-    "2017-10-31",
-    "2018-10-31",
-    "2019-10-31",
-    "2020-10-31",
-    "2021-10-31",
-    "2022-10-31",
-    "2023-10-31",
-    "2024-10-31",
-    "2025-10-31"
-    ],
-    "fete_nationale": [
-    "2011-07-14",
-    "2012-07-14",
-    "2013-07-14",
-    "2014-07-14",
-    "2015-07-14",
-    "2016-07-14",
-    "2017-07-14",
-    "2018-07-14",
-    "2019-07-14",
-    "2020-07-14",
-    "2021-07-14",
-    "2022-07-14",
-    "2023-07-14",
-    "2024-07-14",
-    "2025-07-14"
-    ],
-    "saint_valentin": [
-    "2011-02-14",
-    "2012-02-14",
-    "2013-02-14",
-    "2014-02-14",
-    "2015-02-14",
-    "2016-02-14",
-    "2017-02-14",
-    "2018-02-14",
-    "2019-02-14",
-    "2020-02-14",
-    "2021-02-14",
-    "2022-02-14",
-    "2023-02-14",
-    "2024-02-14",
-    "2025-02-14"
-    ],
-    "yennayer": [
-    "2011-01-12",
-    "2012-01-12",
-    "2013-01-12",
-    "2014-01-12",
-    "2015-01-12",
-    "2016-01-12",
-    "2017-01-12",
-    "2018-01-12",
-    "2019-01-12",
-    "2020-01-12",
-    "2021-01-12",
-    "2022-01-12",
-    "2023-01-12",
-    "2024-01-12",
-    "2025-01-12"
-    ]
-}     
-evenement_all["externe"]=evenement_externe
+   
+# evenement_all["externe"]=evenement_externe
 matrice,array_Causes=CalculeCausa(evenement_all,columns)
+# Nombre de lignes et de colonnes
+# reduction
+n_rows = 6
+n_cols = sum(1 for element in matrice[0] if element != 0) if matrice and matrice[0] else 0
 
-non_zero_elements = [element for row in matrice for element in row if element != 0]
-mean_value = sum(non_zero_elements) / len(non_zero_elements) if non_zero_elements else 0
+
+row_means=[]
+# Calculer la moyenne de chaque ligne
  
-print("proposer",mean_value)
+for row in range(n_rows):
+    row_sum = sum(matrice[row][n_rows+col] for col in range(n_cols))
+    print(n_cols)
+    row_mean = row_sum / n_cols
+    row_means.append(row_mean)
 
+# Calculer la moyenne de toutes les moyennes des colonnes
+overall_mean = max(row_means)
 
-
+print("Moyennes de chaque lignes:", row_means)
+print("Mmax moyenne:", overall_mean)
 # Close the cursor and the connection
 cursor.close()
 conn.close()
