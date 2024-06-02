@@ -21,8 +21,8 @@ cursor = conn.cursor()
 # Initialize data_frames dictionary
 data_frames = {}
 
-# Query and process the 'quantity' column
-column = "quantity"
+# Query and process the 'profit' column
+column = "profit"
 cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{column}'")
 row = cursor.fetchone()
 table_name = row[0] if row else None
@@ -44,8 +44,8 @@ if table_name:
         else:
             data_frames[column] = [row[len(date_preference_static.split(','))] for row in rows]
 
-# Query and process the 'reduction' column
-column = "reduction"
+# Query and process the 'retour_quantity' column
+column = "retour_quantity"
 cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{column}'")
 row = cursor.fetchone()
 table_name = row[0] if row else None
@@ -76,8 +76,8 @@ print(df.shape)
 df = df.fillna(df.mean())
 
 # Define columns for the Granger causality test
-col1 = "quantity"
-col2 = "reduction"
+col1 = "profit"
+col2 = "retour_quantity"
 
 max_lag = 5  # Choose the maximum number of lags to test
 results_all = []
@@ -389,7 +389,7 @@ dimension_all={}
 TDate="index_JMA"
  
 # print(date_interval)
-columns=["quantity","reduction"]
+columns=["profit","retour_quantity"]
 for index, column in enumerate(columns):
     cursor.execute(f"SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = '{column}'")
     row = cursor.fetchall()
@@ -492,7 +492,7 @@ for index, column in enumerate(columns):
 # evenement_all["externe"]=evenement_externe
 matrice,array_Causes=CalculeCausa(evenement_all,columns)
 # Nombre de lignes et de colonnes
-# reduction
+# retour_quantity
 n_rows = 6
 n_cols = sum(1 for element in matrice[0] if element != 0) if matrice and matrice[0] else 0
 
@@ -508,6 +508,7 @@ for row in range(n_rows):
 
 # Calculer la moyenne de toutes les moyennes des colonnes
 overall_mean = max(row_means)
+# overall_mean=sum(row_means) / len(row_means)
 
 print("Moyennes de chaque lignes:", row_means)
 print("Mmax moyenne:", overall_mean)
