@@ -1,11 +1,25 @@
 import math
+import pandas as pd
+import os
 from datetime import datetime,timedelta
 class CalculeCauslite:
     def __init__(self):
         self.DI = 0
+    def save_event_data(self,event_data, filename):
+        event_df = pd.DataFrame(event_data)
+
+        # Check if the file exists
+        if os.path.exists(filename):
+            # Append mode (a) to add new data without overwriting
+            event_df.to_csv(filename, index=False, mode='a', header=False)
+        else:
+            # Write header if the file doesn't exist
+            event_df.to_csv(filename, index=False, header=True)  
 
     def creation_matrice_influence(self, E):
         matrice = [[0 for _ in range(len(E))] for _ in range(len(E))]
+        evenement_csv = {"evenement": []}
+
         # e1_1 e1_2 e1_3 e2_1 e2_2 e2_3
         # Remplir la matrice avec les valeurs de causalité
         for i in range(len(E)):
@@ -32,10 +46,16 @@ class CalculeCauslite:
         # Interprétation de la matrice
         print("-------Interprétation de la matrice")
         for i in range(len(E)):
+            evenement = f"{E[i].ID_e}"
+
             for j in range(len(E)):
                 if matrice[i][j] != 0 and matrice[i][j]< 1:
                     print(E[i].ID_e + " causes " + E[j].ID_e + " with an Influence Degree of: " + str(matrice[i][j]))
+                    if(matrice[i][j]>0,5 and E[i].Measure!=E[j].Measure):
+                        evenement+=f",{E[j].ID_e}"
+            evenement_csv["evenement"].append(evenement)
 
+        self.save_event_data(evenement_csv,"events.csv")
         #SEND TO FRONT
         # Trier la matrice par ordre descendant
         flattened_matrice = [(i, j, matrice[i][j]) for i in range(len(matrice)) for j in range(len(matrice[i]))]
