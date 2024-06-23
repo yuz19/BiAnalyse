@@ -67,6 +67,7 @@ class CalculeCauslite:
         if E1_cause.Measure == E2_effect.Measure:
             self.DI = 0
         else:
+            print(E1_cause.pos_dates[0])
             if len(E1_cause.pos_dates[0].split("-"))==3:
                 E1_pos_dates = sorted(E1_cause.pos_dates, key=lambda x: datetime.strptime(x, '%Y-%m-%d'), reverse=True)
 
