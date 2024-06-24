@@ -74,7 +74,7 @@ class Proposer:
         for pk_column in primary_key_columns:
             pklower = pk_column.lower() 
             if pklower not in banned_words: 
-                print("Primary Key:", pk_column)
+                # print("Primary Key:", pk_column)
                 # Select primary key values with their top high measure
                 cursor.execute(f"SELECT  {pk_column} from {table_name} ORDER BY {col} ASC LIMIT 30")
 
@@ -94,7 +94,7 @@ class Proposer:
                     banned_words2 = ["code_postal"]
                     # Filter the columns list based on banned words
                     filtered_columns = [column for column in columns if column.lower() not in banned_words2]
-                    print("Filtered Columns:", filtered_columns)
+                    # print("Filtered Columns:", filtered_columns)
                     # Assign filtered columns to the dimension dictionary
                     dim[referenced_table_name] = filtered_columns
             
@@ -116,7 +116,7 @@ class Proposer:
                 column_names_str = ", ".join(cols)
                 where_conditions = []
                 first_pk, first_values = next(iter(dim_keys_toManipulate[1].items()))
-                print(first_pk,"pk",first_values)
+                # print(first_pk,"pk",first_values)
 
             
         
@@ -130,7 +130,7 @@ class Proposer:
                 cursor.execute( f"SELECT {column_names_str} FROM {table_name} WHERE {where_conditions[0]}")
 
                 rows = cursor.fetchall()
-                print(rows)
+                # print(rows)
                 if (rows):
                     selectTable[table_name]=[row for row in rows]
                 # remove first element
@@ -227,36 +227,37 @@ class Proposer:
 
             # Analyser les tendances et les points hauts/bas
             tend_intervals = self.analyze_tend_intervals( peaks,df,TDate)
+            print(tend_intervals)
+            if(len(tend_intervals)>=2):
+                qualif_tend_intervals =self.qualification(tend_intervals)
+                evenements=self.Evenement(tend_intervals,index)
+                
+                evenements_tries_par_ref = {}
             
-            qualif_tend_intervals =self.qualification(tend_intervals)
-            evenements=self.Evenement(tend_intervals,index)
-            
-            evenements_tries_par_ref = {}
-         
-            # Parcourir chaque événement
-            for evenement in evenements:
-                ref = evenement['Ref']
-                # Si la référence n'existe pas encore dans le dictionnaire, l'initialiser avec une liste vide
-                if ref not in evenements_tries_par_ref:
-                    evenements_tries_par_ref[ref] = []
-                # Ajouter l'événement à la liste correspondante
-                evenements_tries_par_ref[ref].append(evenement["Date"])     
+                # Parcourir chaque événement
+                for evenement in evenements:
+                    ref = evenement['Ref']
+                    # Si la référence n'existe pas encore dans le dictionnaire, l'initialiser avec une liste vide
+                    if ref not in evenements_tries_par_ref:
+                        evenements_tries_par_ref[ref] = []
+                    # Ajouter l'événement à la liste correspondante
+                    evenements_tries_par_ref[ref].append(evenement["Date"])     
 
 
 
-            evenement_all[column]=evenements_tries_par_ref
+                evenement_all[column]=evenements_tries_par_ref
 
-            
+                
 
-            results.append({
-                "column": column,
-                "tendance": tend_intervals,
-                "evenement":evenements,
-            })
-            
-            # TRANFER DATA
-            for i, item in enumerate(data_all[column]):
-                item['valeur'] = data_smoothed[i]
+                results.append({
+                    "column": column,
+                    "tendance": tend_intervals,
+                    "evenement":evenements,
+                })
+                
+                # TRANFER DATA
+                for i, item in enumerate(data_all[column]):
+                    item['valeur'] = data_smoothed[i]
                 
         evenement_externe={
             "noel": [
@@ -362,10 +363,48 @@ class Proposer:
             "2025-01-12"
             ]
         }     
-        evenement_all["externe"]=evenement_externe
-        matrice,array_Causes=self.CalculeCausa(evenement_all,columns)
-     
-        
+      
+        event_prefece_externe = {}
+
+        if len(date_prefrence.split(',')) == 3:
+            evenement_all["externe"] = evenement_externe
+            
+        elif len(date_prefrence.split(',')) == 2:
+            for ex in evenement_externe:
+                event_prefece_externe[ex] = []
+                for date in evenement_externe[ex]:
+                    if ex in event_prefece_externe:
+                        if not date.split("-")[0] + '-' + date.split("-")[1] in event_prefece_externe[ex]:
+                            event_prefece_externe[ex].append(date.split("-")[0] + '-' + date.split("-")[1])
+                    else:
+                        event_prefece_externe[ex] = [date.split("-")[0] + '-' + date.split("-")[1]]
+                        
+            evenement_all["externe"] = event_prefece_externe
+
+        elif len(date_prefrence.split(',')) == 1:
+            for ex in evenement_externe:
+                event_prefece_externe[ex] = []
+                for date in evenement_externe[ex]:
+                    if ex in event_prefece_externe:
+                        if not date.split("-")[0] in event_prefece_externe[ex]:                   
+                            event_prefece_externe[ex].append(date.split("-")[0])
+                    else:
+                        event_prefece_externe[ex] = [date.split("-")[0]]
+                                    
+            evenement_all["externe"] = event_prefece_externe
+
+        # print(evenement_all["externe"])
+        print('calcule col')
+        x=0
+        for col in columns:
+            if col in evenement_all:
+                x=x+1
+       
+        if x == len(columns):
+            matrice,array_Causes=self.CalculeCausa(evenement_all,columns)
+        else:
+            array_Causes=[]
+                  
         
         
         results_all.append(results)
