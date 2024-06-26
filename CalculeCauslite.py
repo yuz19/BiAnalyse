@@ -68,7 +68,8 @@ class CalculeCauslite:
                 
                     "causes":f"{E[index_i].ID_e} causes {E[index_j].ID_e} with an Influence Degree of:" ,
                     "degree":influence_degree,
-                    "mesure":E[index_i].Measure
+                    # "mesure":E[index_i].Measure
+                    "mesure": "externe" if E[index_i].Measure == "externe" or E[index_j].Measure == "externe" else E[index_i].Measure if E[index_i] .Measure!= "externe" else E[index_i] .Measure
                 })
         
         # Afficher les 10 premières valeurs de causalité
